@@ -1,5 +1,5 @@
 import cv2
-from utils import get_parking_spots_bboxes
+from utils import get_parking_spots_bboxes, empty_or_not
 mask_path = 'mask.png'
 video_path = 'data/parking.mp4'
 
@@ -14,13 +14,21 @@ connected_components = cv2.connectedComponentsWithStats(mask, 4, cv2.CV_32S)
 
 spots = get_parking_spots_bboxes(connected_components)
 
-print(spots[0])
+# print(spots[0])
 
 while ret:
     ret, frame = cap.read()
     for spot in spots:
         x1, y1, w, h = spot
-        cv2.rectangle(frame, (x1, y1), (x1+w, y1+h), [0,255,0],3)
+        
+        spot_crop = frame[y1:y1+h, x1:x1+h]
+
+        spot_status = empty_or_not(spot_bgr=spot_crop)
+
+        if spot_status:
+            cv2.rectangle(frame, (x1, y1), (x1+w, y1+h), [0,255,0],3)
+        else:
+            cv2.rectangle(frame, (x1, y1), (x1+w, y1+h), [0,0,255],3)
 
     cv2.imshow('frame', frame)
     if cv2.waitKey(25) & 0xFF == ord('q'):
