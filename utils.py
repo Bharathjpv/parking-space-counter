@@ -1,25 +1,39 @@
 import pickle
-
 from skimage.transform import resize
 import numpy as np
 import cv2
+from PIL import Image
+
+import torch
+from model import Net
+
+PATH = "model.pth"
 
 
 EMPTY = True
 NOT_EMPTY = False
 
-MODEL = pickle.load(open("model.pickle", "rb"))
+# MODEL = pickle.load(open("model.pickle", "rb"))
+
+net_load = Net()
+net_load.load_state_dict(torch.load(PATH))
+
+trans = pickle.load(open('transform.pickle', 'rb'))
 
 
 def empty_or_not(spot_bgr):
 
-    flat_data = []
+    img = Image.fromarray(spot_bgr)
+    transformed_img = trans(img)
 
-    img_resized = resize(spot_bgr, (15, 15, 3))
-    flat_data.append(img_resized.flatten())
-    flat_data = np.array(flat_data)
+    tensor = torch.unsqueeze(transformed_img, dim=0)
 
-    y_output = MODEL.predict(flat_data)
+    out = net_load(tensor)
+
+    _, predicted = torch.max(out.data, 1)
+
+    y_output = predicted.item()
+
 
     if y_output == 0:
         return EMPTY

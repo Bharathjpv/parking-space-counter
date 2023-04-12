@@ -2,6 +2,7 @@ import torch
 from torchvision import datasets, transforms
 import torch.nn as nn
 import torch.optim as optim
+import pickle
 
 from model import Net
 
@@ -52,5 +53,24 @@ for epoch in range(20):  # loop over the dataset multiple times
 
 print('Finished Training')
 
+correct = 0
+total = 0
+# since we're not training, we don't need to calculate the gradients for our outputs
+with torch.no_grad():
+    for data in testloader:
+        images, labels = data
+        # calculate outputs by running images through the network
+        outputs = net(images)
+        # the class with the highest energy is what we choose as prediction
+        _, predicted = torch.max(outputs.data, 1)
+        total += labels.size(0)
+        correct += (predicted == labels).sum().item()
+
+print(f'Accuracy of the network on the {int(.2 * len(dataset))} test images: {100 * correct // total} %')
+
 PATH = 'model.pth'
 torch.save(net.state_dict(), PATH)
+
+f = open('transform.pickle', 'wb')
+pickle.dump(transform, f)
+f.close()
