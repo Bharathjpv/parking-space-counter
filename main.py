@@ -13,17 +13,21 @@ connected_components = cv2.connectedComponentsWithStats(mask, 4, cv2.CV_32S)
 # print(len(connected_components))
 
 spots = get_parking_spots_bboxes(connected_components)
-
 # print(spots[0])
+
+spots_status = [None for j in spots]
+step = 30
 
 while ret:
     ret, frame = cap.read()
-    for spot in spots:
+    for sopt_idx, spot in enumerate(spots):
         x1, y1, w, h = spot
         
         spot_crop = frame[y1:y1+h, x1:x1+h]
 
         spot_status = empty_or_not(spot_bgr=spot_crop)
+
+        spots_status[sopt_idx] = spot_status
 
         if spot_status:
             cv2.rectangle(frame, (x1, y1), (x1+w, y1+h), [0,255,0],3)
